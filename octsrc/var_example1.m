@@ -6,7 +6,7 @@ close all;
 % fundamental sine amplitude:
 p.A0 = 1;
 % fundamental sine periods in the window:
-p.N0_per = linspace(3,5,50);
+p.N0_per = linspace(3,5,70);
 % sampling rate:
 p.fs = 10000;
 % fundamental frequency:
@@ -14,9 +14,9 @@ p.f0 = 50.3;
 % second tone frequency:
 p.fx = 150.1;
 % second tone amplitude:
-p.Ax = logspace(log10(100e-6),log10(1.0),7);
+p.Ax = logspace(log10(100e-6),log10(1.0),8);
 % monte-carlo cycles:
-p.R = 50;
+p.R = 100;
  
 
 % initialize parameter variation lib for setup 'p'
@@ -48,7 +48,9 @@ res = cellfun(@var_example_proc,p_list,'UniformOutput',false);
 [r2d,ax_values,ax_names] = var_resize_result(res,vr,par);
 
 % convert cell array of structs to single array 
-max_err = reshape([[r2d{:}].e_rms],size(r2d));
+dimz = size(r2d);
+r2d = [r2d{:}];
+max_err = reshape([r2d.e_rms],dimz);
 
 % it is 2D dependence, so we can plot it as a mesh:
 figure;
@@ -59,7 +61,6 @@ set(gca, 'xscale', 'log');
 xlabel(str_insert_escapes(ax_names{2}));
 ylabel(str_insert_escapes(ax_names{1}));
 zlabel(str_insert_escapes('Windowed RMS error [ppm]'));
-
 
 
 % --- 2) plotting dependencies along selected axes using var lib plots:
@@ -74,5 +75,9 @@ var_plot_results_vect(vr,res,par,{'norm','e_rms','lim','s_rms',2,'logy'},'N0_per
 % plot dependence of 'res.e_rms' on the parameter 'par.Ax' for parameter par.N0_per(5)
 var_plot_results_vect(vr,res,par,{'norm','e_rms','logx'},'Ax','N0_per',5);
 
+% plot dependence of 'res.e_rms' on the parameter 'par.Ax' with average
+% along parameter axis 'par.N0_per' and add error bars from the
+% 2*std(res.e_rms) alsong the axis 'par.N0_per':
+var_plot_results_vect(vr,res,par,{'mean','e_rms','stdbar',2,'logx'},'Ax','N0_per');
 
 

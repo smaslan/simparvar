@@ -74,25 +74,25 @@ function [r,v,par_val,par_name,info_str] = var_get_results_vect(res,par,vr,varar
   % finish filter
   ofs = fil_mult*fil_ofs';
   
-  %% get results diplacement in results buffer for selected vector of parameters
+  % get results diplacement in results buffer for selected vector of parameters
   idx_step = prod([1;vr.par_n(1:pid-1)]);
   
-  %% vector length
+  % vector length
   idx_rng = vr.par_n(pid);
   
-  %% return results vector
+  % return results vector
   r = {res{(0:idx_rng-1)*idx_step+1 + ofs}};
   
-  %% convert vector of result structs to struct of result vectors/arrays (hardcore implementation)
+  % convert vector of result structs to struct of result vectors/arrays (hardcore implementation)
   v = vectorize_structs_elements(r);
   
-  %% return variable parameter values
+  % return variable parameter values
   par_val = getfield(par,vr.names{pid});
   
-  %% return name of the variable parameter
+  % return name of the variable parameter
   par_name = vr.names{pid};
      
-  %% build info string for the fixed parameters
+  % build info string for the fixed parameters
   % for each parameter
   info_str = '';
   for k = 1:vr.n
@@ -104,7 +104,8 @@ function [r,v,par_val,par_name,info_str] = var_get_results_vect(res,par,vr,varar
       end
       
       % get parameter value
-      val = getfield(par,vr.names{k})(fil_ofs(k)+1);
+      val = getfield(par,vr.names{k});
+      val = val(fil_ofs(k)+1);
       
       % add to info string
       info_str = [info_str vr.names{k} '(' int2str(fil_ofs(k)+1) ') = ' num2str(val)];
@@ -112,4 +113,4 @@ function [r,v,par_val,par_name,info_str] = var_get_results_vect(res,par,vr,varar
     end
   end
    
-endfunction
+end

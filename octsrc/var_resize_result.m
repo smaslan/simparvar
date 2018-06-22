@@ -31,7 +31,7 @@ function [res,ax_values,ax_names] = var_resize_result(res,vr,par)
     if numel(dims) < 2
         dims = [dims;1];
     end
-    res = reshape(res,dims);
+    res = reshape(res,[dims(:)]');
     
     % extract parameter axes names:
     ax_names = vr.names(vr.par_n > 1);

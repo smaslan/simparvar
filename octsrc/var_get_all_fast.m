@@ -51,8 +51,8 @@ function [outp] = var_get_all_fast(par,vr,step,verbose)
 % The script is distributed under MIT license, https://opensource.org/licenses/MIT   
 
 
-    if(verbose)
-        printf('Generating parameter combinations ... \r');
+    if verbose
+        fprintf('Generating parameter combinations ... \r');
     end
     
     % total combinations:
@@ -67,10 +67,10 @@ function [outp] = var_get_all_fast(par,vr,step,verbose)
         if vr.par_n(v) > 1
             p_prot = setfield(p_prot,vr.names{v},0); 
         end
-        c_prot(v,1) = getfield(p_prot,vr.names{v});
+        c_prot{v,1} = getfield(p_prot,vr.names{v});
     end
     
-    vidid = find(strcmpi(vr.names,'_vpid_'));
+    vidid = find(strcmpi(vr.names,'pvpid'));
     
     % vector variables count:
     vn = sum(vr.par_n > 1);
@@ -124,20 +124,24 @@ function [outp] = var_get_all_fast(par,vr,step,verbose)
             c_prot{vidid} = k;
             c_list{k} = c_prot;
         end
-        tot += todo;
-        if(verbose)
-            printf('Generating parameter combinations ... %3.0f%%  \r',100*tot/N);
-        endif   
+        tot = tot + todo;
+        if verbose
+            fprintf('Generating parameter combinations ... %3.0f%%  \r',100*tot/N);
+        end   
     end
   
-    if(verbose)
-        printf('\n');
-    endif
+    if verbose
+        fprintf('\n');
+    end
     
     % make cell array of parameter structs:
-    outp = cellfun(@cell2struct,c_list,{vr.names},{1});
+    if isOctave
+        outp = cellfun(@cell2struct,c_list,{vr.names},{1});        
+    else
+        outp = cellfun(@cell2struct,c_list,repmat({vr.names},size(c_list)),repmat({1},size(c_list)));
+    end
     
     % convert to cells
     outp = num2cell(outp);
-    
-endfunction
+
+end

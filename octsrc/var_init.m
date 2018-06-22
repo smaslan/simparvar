@@ -12,10 +12,10 @@ function [vr,par] = var_init(par)
 % The script is distributed under MIT license, https://opensource.org/licenses/MIT 
   
   % add paramter combination ID into the parameters structure
-  par._vpid_ = 0;
+  par.pvpid = 0;
   
   % add total paramter combinations count into the parameters structure
-  par._vpcnt_ = 0;
+  par.pvpcnt = 0;
       
   % get input paramter names
   vr.names = fieldnames(par);
@@ -35,7 +35,7 @@ function [vr,par] = var_init(par)
     
   % get total variations count
   vr.var_n = prod(vr.par_n);
-  par._vpcnt_ = vr.var_n;
+  par.pvpcnt = vr.var_n;
   
   % no paramter combinations generated yet
   vr.var_id = 0;
@@ -43,5 +43,4 @@ function [vr,par] = var_init(par)
   % no results measured yet
   vr.res_n = 0;
   
-endfunction
-
+end
