@@ -4,6 +4,9 @@ function [v,x_val,y_val,x_name,y_name,info_str] = var_get_results_mat(res,par,vr
 % into 2D matrixes. The matrixes are stores into output structure 'v'.
 % Vector and matrix elements of 'res' structure are ignored.
 %
+% Example:
+%  [v,x_val,y_val,x_name,y_name,info_str] = var_get_results_mat(res,par,vr, varargin)
+%
 % Parameters:
 %  res      - results cell vector
 %  par      - struct of simulation parameters (scalars and vectors)
@@ -12,6 +15,7 @@ function [v,x_val,y_val,x_name,y_name,info_str] = var_get_results_mat(res,par,vr
 %    1)   'x_vector_name' - X vector name
 %    2)   'y_vector_name' - Y vector name
 %    3-?) 'vector_name_1',vector_1_index,'vector_name_2',vector_2_index
+%         These are used to manually select remaining parameter values
 %
 % Returns:
 %  v        - struct of 2D matrices of results
