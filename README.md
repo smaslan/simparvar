@@ -1,4 +1,4 @@
-# TWM-aux
+# Automatic variation of simulation parameters for Matlab/Octave
 Simple set of functions for automatic variation of simulation parameters for means of calculating multidimensional sensitivity analysis and uncertainty calculations. It will work for any number of variable parameters. Main purpose was to generate all possible combinations of all parameter in advance, so the particular calculation can be processed using some of the multicore methods, such as 'parfor', 'parcellfun', 'multicore', etc.
 Advantage over manual variation using nested for-cycles, this approach is more flexible because change parameter-axes of simulation is just matter of setting desired parameter to a vector. 
 
