@@ -26,14 +26,16 @@ function [res] = vectorize_structs_elements(inp)
     
     % get struct field
     fld = cinp{1}{n};
-    
+
     % allocate buffers
-    if(isscalar(fld))
+    if(isscalar(fld) && (isnumeric(fld) || isreal(fld)))
       % is scalar
       par = zeros(N,1);
-    elseif(isvector(fld))
+      par(1) = fld;
+    elseif(isvector(fld) && (isnumeric(fld) || isreal(fld)))
       % is vector 
-      par = zeros(N,numel(fld));
+      par = zeros(N,length(fld));
+      par(1,:) = fld;
     else
       % skip everything else
       continue;                
@@ -53,6 +55,5 @@ function [res] = vectorize_structs_elements(inp)
     % add element into output structure
     res = setfield(res,rnms{n},par);  
      
-  end
-
+  end  
 end

@@ -89,6 +89,9 @@ function [outp] = var_get_all_fast(par,vr,step,verbose)
         % reshape the vector to v-dim:
         dimn = eye(vn);
         dimn = [dimn(v,:)*(numel(v_val)-1) + 1];
+        if vn == 1
+            dimn = [dimn 1];
+        end
         vars{v} = reshape(v_val,dimn);
     
     end

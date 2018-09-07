@@ -10,12 +10,9 @@ function [vr,par] = var_init(par)
 % This is part of VAR library for automatic multidim. variation of simulation parameters.
 % (c) 2018, Stanislav Maslan, s.maslan@seznam.cz
 % The script is distributed under MIT license, https://opensource.org/licenses/MIT 
-  
+
   % add paramter combination ID into the parameters structure
   par.pvpid = 0;
-  
-  % add total paramter combinations count into the parameters structure
-  par.pvpcnt = 0;
       
   % get input paramter names
   vr.names = fieldnames(par);
@@ -32,7 +29,7 @@ function [vr,par] = var_init(par)
   % assume char strings are scalars:
   is_charz = cellfun(@ischar,cellfun(@getfield,repmat({par},length(vr.names),1),vr.names,'UniformOutput',false));  
   vr.par_n(~~is_charz) = 1;
-    
+  
   % get total variations count
   vr.var_n = prod(vr.par_n);
   par.pvpcnt = vr.var_n;
