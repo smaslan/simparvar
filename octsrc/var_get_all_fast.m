@@ -47,13 +47,16 @@ function [outp] = var_get_all_fast(par,vr,step,verbose)
 % License:
 % --------
 % This is part of VAR library for automatic multidim. variation of simulation parameters.
-% (c) 2018, Stanislav Maslan, s.maslan@seznam.cz
+% (c) 2018-2023, Stanislav Maslan, s.maslan@seznam.cz
 % The script is distributed under MIT license, https://opensource.org/licenses/MIT   
 
+    if vr.has_sub_structs
+        error('Sub-structure parameter variation not supported! Use var_get_all() instead.');
+    end
 
     if verbose
         fprintf('Generating parameter combinations ... \r');
-    end
+    end      
     
     % total combinations:
     N = prod(vr.par_n);
