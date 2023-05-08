@@ -25,10 +25,16 @@ function [res,ax_values,ax_names] = var_resize_result(res,vr,par)
 % The script is distributed under MIT license, https://opensource.org/licenses/MIT      
  
     % dimensions of the parameter axes:
-    dims = vr.par_n(vr.par_n > 1);    
+    dims = vr.par_n(vr.par_n > 1);   
     
     % reshape results:
-    if numel(dims) < 2
+    if numel(dims) < 1
+        % scalar - do nothing
+        ax_names = {};
+        ax_values = {};
+        return;
+    elseif numel(dims) < 2
+        % 1D
         dims = [dims;1];
     end
     res = reshape(res,[dims(:)]');
@@ -40,14 +46,14 @@ function [res,ax_values,ax_names] = var_resize_result(res,vr,par)
     vn = sum(vr.par_n > 1);
     vids = [1:numel(vr.par_n)];
     vids = vids(vr.par_n > 1);
-    vars = {};        
+    %vars = {};        
     for v = 1:vn
         % get variable vector:
         v_val = getfield(par,vr.names{vids(v)});
         
         % reshape the vector to their dim:
-        dimn = eye(vn);
-        dimn = [dimn(v,:)*(numel(v_val)-1) + 1];
+        dimn = eye(max(vn,2));
+        dimn = [dimn(v,:)*(numel(v_val)-1) + 1]
         ax_values{v} = reshape(v_val,dimn);    
     end
 

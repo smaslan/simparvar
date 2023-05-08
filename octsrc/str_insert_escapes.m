@@ -1,10 +1,16 @@
 function [str] = str_insert_escapes(str)
-% 'Escapification' of formatting characters for Latex style strings.
+% latex 'Escapification' of formatting characters for Latex style strings.
 
-  %% add escape characters for '_'
-  tid = find(str=='_');
-  for k=1:length(tid)
-    str((tid(k)+k-1):end+1) = ['\' str((tid(k)+k-1):end)];
-  end
+    if iscell(str)
+        str = cellfun('str_insert_escapes_s',str,'UniformOutput',false);
+    else
+        str = str_insert_escapes_s(str);
+    end
+end
 
+function [str] = str_insert_escapes_s(str)
+    tid = find(str=='_' | str=='^');
+    for k=1:length(tid)
+        str((tid(k)+k-1):end+1) = ['\' str((tid(k)+k-1):end)];
+    end
 end

@@ -14,7 +14,9 @@ function [] = var_plot_results_vect(vr,res,par,opt,varargin)
 %            'mean' - dependence along X-vector with means along Y-vector
 %            'hist' - histogram along X-vector with hist_n bins
 %            hist_n - use only for histogram mode
-%          {'var_name'} - result struct element on graph Y-axis (second option, required)
+%          {'var_name',optional_index} - result struct element on graph Y-axis (second option, required)
+%                                        optional_index can be scalar or list of indices to select
+%                                        column of eventual vector type element
 %          {'logx'} - enable x-log scale
 %          {'logy'} - enable y-log scale
 %          {'stdbar',exp_k} - plot error bars, applies only for 'mean' mode,
@@ -26,11 +28,12 @@ function [] = var_plot_results_vect(vr,res,par,opt,varargin)
 %          {'diff','d_var_name'} - difference mode, plotted values: var_name - d_var_name
 %          {'ref','r_var_name'} - plots reference value from 'r_var_name'
 %  ... - parameters setup:
-%      - if nothing defined, X-vector is first vector paramter in 'par' struct
-%      - first paramter is always X-vector name
+%      - if nothing defined, X-vector is first vector parameter in 'par' struct
+%      - first parameter is always X-axis vector name
 %      - second parameter for 'mean' mode is Y-vector name
-%      - following parameters are indexes of the other axes:
+%      - follows parameters are indexes of the other axes:
 %         'par_name_1',index_1, 'par_name_2',index_2, ...
+%         note the index can be scalar or list type to select multiple sets
 %
 % Example data:
 %  Simulator setup:
@@ -51,9 +54,18 @@ function [] = var_plot_results_vect(vr,res,par,opt,varargin)
 %   ...,{'norm','k2','logy'}
 %   ...,{'norm','k2','logy'},'B'
 %
+%  Plot simple dependence of res.k2(2) result along default x-axis
+%   ...,{'norm','k2',2}
+%
+%  Plot multiple dependencies of res.k2(3:5) results along default x-axis
+%   ...,{'norm','k2',3:5}
+%
 %  Plot simple results dependence along B vector, for par.C(3), par.D(2), with y-logscale,
 %  use 'res{}.k2' for y-axis:
 %   ...,{'norm','k2','logy'},'B','C',3,'D',2
+%
+%  Plot simple results dependence along C vector, for par.D(1), par.D(2) and par.D(3)
+%   ...,{'norm','k2'},'C','D',1:3
 %
 %  The same with limits from 'res.uk2' variable expanded by k = 2:
 %   ...,{'norm','k2','logy','lim','uk2',2},'B','C',3,'D',2
@@ -75,7 +87,7 @@ function [] = var_plot_results_vect(vr,res,par,opt,varargin)
 % License:
 % --------
 % This is part of VAR library for automatic multidim. variation of simulation parameters.
-% (c) 2018, Stanislav Maslan, s.maslan@seznam.cz
+% (c) 2018-2023, Stanislav Maslan, s.maslan@seznam.cz
 % The script is distributed under MIT license, https://opensource.org/licenses/MIT
 
     if nargin < 4
@@ -99,25 +111,27 @@ function [] = var_plot_results_vect(vr,res,par,opt,varargin)
     lim_y_name_b = '';
     diff_v_name = '';
     ref_v_name = '';
+    res_vec_id = [];
+    list_labels_suffix = {};
 
     %% parse options
     if numel(opt)
         % identify mode
         modes = {'norm','mean','hist'};
         mid = find(strcmp(opt{1},modes),1,'first');
-        if(~numel(mid))
+        if isempty(mid)
             % undefined mode
             error(['Mode ''' opt{1} ''' undefined!']);
         end
         mode = modes{mid};
-        opt = {opt{2:end}};
+        opt = opt(2:end);
 
         % get paramter for 'hist' mode
-        if(strcmp(mode,'hist') && (numel(opt)<1 || ~isscalar(opt{1})))
+        if strcmp(mode,'hist') && (numel(opt)<1 || ~isscalar(opt{1}))
             error('Missing paramter for ''hist'' option!');
-        elseif(strcmp(mode,'hist'))
+        elseif strcmp(mode,'hist')
             hist_n = opt{1};
-            opt = {opt{2:end}};
+            opt = opt(2:end);
         end
 
         if numel(opt) >= 1
@@ -126,78 +140,84 @@ function [] = var_plot_results_vect(vr,res,par,opt,varargin)
             if ~isfield(res{1},par_name)
                 error(['Element ''' par_name ''' is not member of results structure!']);
             end
+            
+            if numel(opt) >= 2 && isnumeric(opt{2})
+                % next parameter is apparently optional index withing vector-type result element
+                res_vec_id = opt{2};
+                opt = opt(2:end);
+            end
 
             if numel(opt)>=1
+                
                 % look for 'logx' option
                 oid = find(strcmp(opt,'logx'),1,'first');
                 if numel(oid)
                     opt = {opt{1:oid-1} opt{oid+1:end}};
                     logx = 1;
                 end
+                
+                % look for 'logy' option
+                oid = find(strcmp(opt,'logy'),1,'first');
+                if(numel(oid))
+                    opt = {opt{1:oid-1} opt{oid+1:end}};
+                    logy = 1;
+                end
+                    
 
-                if numel(opt) >= 1
-                    % look for 'logy' option
-                    oid = find(strcmp(opt,'logy'),1,'first');
+                if numel(opt) >= 2
+                    % look for 'stdbar' option {'stdbar', expansion_coef}
+                    oid = find(strcmp(opt,'stdbar'),1,'first');
                     if(numel(oid))
-                        opt = {opt{1:oid-1} opt{oid+1:end}};
-                        logy = 1;
+                        if(oid==numel(opt) || ~isscalar(opt{oid+1}))
+                            error('Invalid or missing value for ''stdbar'' option!');
+                        end
+                        std_y = opt{oid+1};
+                        opt = {opt{1:oid-1} opt{oid+2:end}};
                     end
 
-                    if numel(opt) >= 2
-                        % look for 'stdbar' option {'stdbar', expansion_coef}
-                        oid = find(strcmp(opt,'stdbar'),1,'first');
-                        if(numel(oid))
-                            if(oid==numel(opt) || ~isscalar(opt{oid+1}))
-                                error('Invalid or missing value for ''stdbar'' option!');
+                    if numel(opt) >= 3
+                        % look for 'lim' option {'lim', 'var_name', expansion_coef}
+                        % or for asymetrical limits {'lim', 'var_a_name', 'var_b_name'}
+                        oid = find(strcmp(opt,'lim'),1,'first');
+                        if numel(oid)
+                            if numel(opt)-oid+1<3 || ~ischar(opt{oid+1}) || (~isscalar(opt{oid+2}) && ~ischar(opt{oid+2}))
+                                error('Invalid or missing parameters for ''lim'' option!');
                             end
-                            std_y = opt{oid+1};
-                            opt = {opt{1:oid-1} opt{oid+2:end}};
+                            if ischar(opt{oid+2})
+                                lim_y = 1;
+                                lim_y_name_b = opt{oid+2};
+                            else
+                                lim_y = opt{oid+2};
+                            end
+                            lim_y_name = opt{oid+1};
+                            opt = {opt{1:oid-1} opt{oid+3:end}};
                         end
 
-                        if numel(opt) >= 3
-                            % look for 'lim' option {'lim', 'var_name', expansion_coef}
-                            % or for asymetrical limits {'lim', 'var_a_name', 'var_b_name'}
-                            oid = find(strcmp(opt,'lim'),1,'first');
+                        if numel(opt) >= 2
+                            % look for 'diff' option {'diff','var_name'}
+                            oid = find(strcmp(opt,'diff'),1,'first');
                             if numel(oid)
-                                if numel(opt)-oid+1<3 || ~ischar(opt{oid+1}) || (~isscalar(opt{oid+2}) && ~ischar(opt{oid+2}))
-                                    error('Invalid or missing parameters for ''lim'' option!');
+                                if numel(opt)-oid+1<2 || ~ischar(opt{oid+1})
+                                    error('Invalid or missing parameters for ''diff'' option!');
                                 end
-                                if ischar(opt{oid+2})
-                                    lim_y = 1;
-                                    lim_y_name_b = opt{oid+2};
-                                else
-                                    lim_y = opt{oid+2};
-                                end
-                                lim_y_name = opt{oid+1};
-                                opt = {opt{1:oid-1} opt{oid+3:end}};
+                                diff_v_name = opt{oid+1};
+                                opt = {opt{1:oid-1} opt{oid+2:end}};
                             end
 
                             if numel(opt) >= 2
-                                % look for 'diff' option {'diff','var_name'}
-                                oid = find(strcmp(opt,'diff'),1,'first');
+                                % look for 'ref' option {'ref','var_name'}
+                                oid = find(strcmp(opt,'ref'),1,'first');
                                 if numel(oid)
                                     if numel(opt)-oid+1<2 || ~ischar(opt{oid+1})
-                                        error('Invalid or missing parameters for ''diff'' option!');
+                                        error('Invalid or missing parameters for ''ref'' option!');
                                     end
-                                    diff_v_name = opt{oid+1};
+                                    ref_v_name = opt{oid+1};
                                     opt = {opt{1:oid-1} opt{oid+2:end}};
-                                end
-
-                                if numel(opt) >= 2
-                                    % look for 'ref' option {'ref','var_name'}
-                                    oid = find(strcmp(opt,'ref'),1,'first');
-                                    if numel(oid)
-                                        if numel(opt)-oid+1<2 || ~ischar(opt{oid+1})
-                                            error('Invalid or missing parameters for ''ref'' option!');
-                                        end
-                                        ref_v_name = opt{oid+1};
-                                        opt = {opt{1:oid-1} opt{oid+2:end}};
-                                    end
                                 end
                             end
                         end
                     end
-                end
+                end                
             end
         end
     end
@@ -273,18 +293,37 @@ function [] = var_plot_results_vect(vr,res,par,opt,varargin)
         end
 
     else
-        %%%% single value dependence %%%%
+        %%%% simple single value dependence %%%%
 
         %% get vector of results
-        [r,v,x_val,x_name,info_str] = var_get_results_vect(res,par,vr,varargin{:});
+        [r,v,x_val,x_name,info_str,list_par_labels] = var_get_results_vect(res,par,vr,varargin{:});
 
         %% get main element
         % found?
         if ~isfield(v,par_name)
             error(['Element ''' par_name ''' is not member of results structure!']);
         end
-        % get its vector
+        % get its data
         r_var = getfield(v,par_name);
+        
+        % select result data columns if requested
+        if isempty(res_vec_id)
+            res_vec_id = [1:size(r_var,2)];
+        end
+        if size(r_var,2) > 1 
+            for k = res_vec_id
+                list_labels_suffix{end+1} = sprintf('(%d)',k);
+            end            
+        end
+        r_var = r_var(:,res_vec_id,:);
+                
+        % reshape result data to columns if some paramter was list type 
+        if numel(list_par_labels)
+            r_var = reshape(r_var,[size(r_var,1) size(r_var,3)]);
+            for k = 1:numel(list_par_labels)
+                list_labels_suffix{k} = sprintf(', %s',list_par_labels{k});
+            end
+        end
 
         %% get 'lim' element
         % found?
@@ -370,21 +409,17 @@ function [] = var_plot_results_vect(vr,res,par,opt,varargin)
 
         %%%% plot graph %%%%
         %% plot main dependence
-        if logx
-            if logy
-                loglog(x_val,y,'+-','LineWidth',2);
-            else
-                semilogx(x_val,y,'+-','LineWidth',2);
-            end
-        else
-            if logy
-                semilogy(x_val,y,'+-','LineWidth',2);
-            else
-                plot(x_val,y,'+-','LineWidth',2);
-            end
-        end
+        plot(x_val,y,'+-','LineWidth',2);
         hold on;
-
+        
+        % set axis maping
+        if logx
+            set(gca,'XScale','log')
+        end
+        if logy
+            set(gca,'YScale','log')
+        end        
+        
         %% plot limits
         if lim_y
             ofs = y;
@@ -435,10 +470,17 @@ function [] = var_plot_results_vect(vr,res,par,opt,varargin)
         else
             % direct plot mode
             ylabel([str_insert_escapes(par_name)],'FontWeight','bold');
-            if lim_y
-                legend([str_insert_escapes(par_name)],['lim(' str_insert_escapes(par_name) ')']);
+            
+            if isempty(list_labels_suffix)
+                trace_names = par_name;
             else
-                legend([str_insert_escapes(par_name)]);
+                trace_names = strcat(par_name, list_labels_suffix);
+            end
+            
+            if lim_y
+                legend(str_insert_escapes(trace_names),['lim(' str_insert_escapes(par_name) ')']);
+            else
+                legend(str_insert_escapes(trace_names));
             end
         end
 
